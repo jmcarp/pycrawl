@@ -33,6 +33,9 @@ class Spider(metaclass=abc.ABCMeta):
         request.depth = context['response'].request.depth + 1
         self._queue.put_nowait(request)
 
+    def run(self):
+        self._loop.run_until_complete(self.start())
+
     @asyncio.coroutine
     def start(self):
         self._seen = set()
