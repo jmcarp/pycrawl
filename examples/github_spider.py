@@ -4,12 +4,11 @@
 from pycrawl.spiders.route import RouteSpider
 
 
-spider = RouteSpider(
-    concurrency=5,
-    urls=['https://github.com'],
-    domains=['github.com', 'www.github.com'],
-    max_depth=3,
-)
+spider = RouteSpider(__name__)
+spider.config.update({
+    'URLS': ['https://github.com'],
+    'DOMAINS': ['github.com', 'www.github.com'],
+})
 
 
 @spider.route('github.com/\w+/?$')

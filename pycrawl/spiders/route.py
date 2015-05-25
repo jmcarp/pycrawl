@@ -18,8 +18,8 @@ class Route:
 
 class RouteSpider(Spider):
 
-    def __init__(self, middlewares=None, routes=None, **config):
-        super().__init__(middlewares=middlewares, **config)
+    def __init__(self, import_name, routes=None, **kwargs):
+        super().__init__(import_name, **kwargs)
         self._routes = routes or []
 
     def route(self, pattern):

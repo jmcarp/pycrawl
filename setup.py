@@ -14,6 +14,7 @@ requirements = [
     'aiohttp>=0.15.3',
     'furl>=0.4.7',
     'pyquery>=1.2.9',
+    'Flask>=0.10.1',
 ]
 
 test_requirements = [

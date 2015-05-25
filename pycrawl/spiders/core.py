@@ -3,6 +3,8 @@ import asyncio
 import contextlib
 
 import aiohttp
+from flask.config import Config
+from flask.helpers import get_root_path
 
 from pycrawl.utils import Queue
 
@@ -11,10 +13,20 @@ from pycrawl.http import Response
 from pycrawl.middleware import SpiderMiddlewareManager
 
 
+default_config = {
+    'CONCURRENCY': 5,
+    'MAX_DEPTH': None,
+    'MAX_RETRIES': 5,
+}
+
+
 class Spider(metaclass=abc.ABCMeta):
 
-    def __init__(self, middlewares=None, loop=None, session=None, **config):
-        self.config = config
+    def __init__(self, import_name, middlewares=None, loop=None, session=None):
+        self.import_name = import_name
+        self.root_path = get_root_path(import_name)
+        self.config = Config(self.root_path, default_config)
+
         self._context = {}
         self._loop = loop or asyncio.get_event_loop()
         self._middlewares = SpiderMiddlewareManager(self, middlewares)
@@ -22,7 +34,7 @@ class Spider(metaclass=abc.ABCMeta):
 
     def enqueue_request(self, **kwargs):
         context = self._context[self._task]
-        max_depth = self.config.get('max_depth')
+        max_depth = self.config.get('MAX_DEPTH')
         if max_depth and context['request'].depth > max_depth:
             return
         request = Request(referer=context['response'], **kwargs)
@@ -40,9 +52,9 @@ class Spider(metaclass=abc.ABCMeta):
     def start(self):
         self._seen = set()
         self._queue = Queue(loop=self._loop)
-        for url in self.config['urls']:
+        for url in self.config['URLS']:
             self._queue.put_nowait(Request(url))
-        workers = [asyncio.Task(self._work()) for _ in range(self.config['concurrency'])]
+        workers = [asyncio.Task(self._work()) for _ in range(self.config['CONCURRENCY'])]
         yield from self._queue.join()
         for worker in workers:
             worker.cancel()
@@ -81,7 +93,7 @@ class Spider(metaclass=abc.ABCMeta):
     def _url_allowed(self, request):
         return next(
             (
-                True for domain in self.config['domains']
+                True for domain in self.config['DOMAINS']
                 if request.furl.host.endswith(domain)
             ),
             False,
