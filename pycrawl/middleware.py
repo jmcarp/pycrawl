@@ -7,7 +7,7 @@ from pycrawl.utils import agnosticmethod
 
 class MiddlewareManager:
 
-    _middlewares = {}
+    _middlewares = collections.defaultdict(list)
 
     def __init__(self, target, middlewares):
         middlewares = extend(self.clone(), middlewares or {})
@@ -53,11 +53,6 @@ class SpiderMiddlewareManager(MiddlewareManager):
     pass
 
 
-SpiderMiddlewareManager.callback('before_request')
-def add_cookies(spider, request):
-    pass
-
-
-SpiderMiddlewareManager.callback('after_error')
+@SpiderMiddlewareManager.callback('after_error')
 def retry_errors(spider, request, error):
     pass

@@ -18,6 +18,12 @@ class Request:
         return furl.furl(self.url)
 
     @property
+    def params(self):
+        return {
+            'url': self.url,
+        }
+
+    @property
     def _comparand(self):
         return (self.priority, self.depth)
 

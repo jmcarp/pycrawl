@@ -13,12 +13,12 @@ from pycrawl.middleware import SpiderMiddlewareManager
 
 class Spider(metaclass=abc.ABCMeta):
 
-    def __init__(self, middlewares=None, loop=None, **config):
+    def __init__(self, middlewares=None, loop=None, session=None, **config):
         self.config = config
         self._context = {}
         self._loop = loop or asyncio.get_event_loop()
-        self._connector = aiohttp.TCPConnector(loop=self._loop)
         self._middlewares = SpiderMiddlewareManager(self, middlewares)
+        self._session = session or aiohttp.ClientSession(loop=self._loop)
 
     def enqueue_request(self, **kwargs):
         context = self._context[self._task]
@@ -57,12 +57,12 @@ class Spider(metaclass=abc.ABCMeta):
     @asyncio.coroutine
     def _fetch(self, request):
         for callback in self._middlewares['before_request']:
-            request = callback(request)
-        resp = yield from aiohttp.request('GET', request.url, loop=self._loop)
+            request = callback(self, request)
+        resp = yield from self._session.request('get', **request.params)
         body = yield from resp.read_and_close()
         response = Response(request, resp, body)
         for callback in self._middlewares['after_response']:
-            response = callback(response)
+            response = callback(self, response)
         with self._request_context(request, response):
             self.parse(response)
 
